@@ -16,7 +16,8 @@ const config = {
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   cookieName: process.env.COOKIE_NAME || 'taskflow_token',
-  cookieSecure: process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production'
+  cookieSecure: process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production',
+  frontendOrigins: new Set((process.env.FRONTEND_ORIGINS || 'http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000,http://127.0.0.1:3000').split(',').map(origin => origin.trim()).filter(Boolean))
 };
 
 if (config.jwtSecret.length < 32) {

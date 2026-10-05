@@ -18,6 +18,8 @@
 
 From `backend/`, install dependencies, copy `.env.example` to `.env`, configure `MONGODB_URI` and a private `JWT_SECRET` (minimum 32 characters), and run `npm start`. The Express service also serves `frontend/` at the same origin.
 
+For VS Code Live Server on `localhost:5500` or `127.0.0.1:5500`, the frontend sends API requests to port 3000. The corresponding origins are allowed by the development CORS configuration. Restart the backend after changing its configuration.
+
 ## Integration test
 
 The auth integration test uses a disposable MongoDB database whose name contains `test`. Set `TASKFLOW_TEST_MONGODB_URI`, for example `mongodb://127.0.0.1:27017/taskflow_phase3_test`, then run `npm test` from `backend/`. The test removes its created account when finished. Without that environment variable, the test is skipped.

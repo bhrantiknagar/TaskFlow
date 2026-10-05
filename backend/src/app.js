@@ -2,6 +2,8 @@ const path = require('node:path');
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const config = require('./config');
 const authRoutes = require('./routes/auth');
 const authenticate = require('./middleware/authenticate');
 const { notFound, errorHandler } = require('./middleware/errors');
@@ -12,6 +14,14 @@ const publicPage = (req, res, next) => res.sendFile(path.join(frontendPath, 'ind
 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({
+  origin(origin, callback) {
+    callback(null, !origin || config.frontendOrigins.has(origin));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(express.json({ limit: '10kb', strict: true }));
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);

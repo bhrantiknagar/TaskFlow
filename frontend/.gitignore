@@ -1,0 +1,19 @@
+# Frontend dependencies
+node_modules/
+
+# Bundler and build output
+dist/
+build/
+.vite/
+.cache/
+*.tsbuildinfo
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+
+# Local frontend environment files
+.env
+.env.*
+!.env.example
