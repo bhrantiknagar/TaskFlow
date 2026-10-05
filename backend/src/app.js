@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const config = require('./config');
 const authRoutes = require('./routes/auth');
+const projectRoutes = require('./routes/projects');
 const authenticate = require('./middleware/authenticate');
 const { notFound, errorHandler } = require('./middleware/errors');
 
@@ -19,12 +20,13 @@ app.use(cors({
     callback(null, !origin || config.frontendOrigins.has(origin));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH'],
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type']
 }));
 app.use(express.json({ limit: '10kb', strict: true }));
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get(['/', '/login', '/register'], publicPage);

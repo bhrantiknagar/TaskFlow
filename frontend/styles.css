@@ -135,6 +135,9 @@ tbody tr:last-child td { border-bottom: 0; }
 .info-line strong { color: #424a55; font-weight: 600; text-align: right; }
 .member-line { display: flex; align-items: center; gap: 9px; font-size: 10px; }
 .member-line + .member-line { margin-top: 10px; }
+.member-role { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 400; }
+.member-remove { width: 25px; height: 25px; margin-left: auto; border: 1px solid var(--line); border-radius: 7px; color: #79818d; background: white; }
+.member-remove:hover { color: var(--rose); background: var(--rose-soft); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .field { display: grid; gap: 6px; }
 .field.full { grid-column: 1/-1; }
