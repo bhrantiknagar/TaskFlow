@@ -178,6 +178,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .auth-form .button { width: 100%; margin-top: 5px; }
 .auth-switch { margin-top: 17px; text-align: center; color: var(--muted); font-size: 10px; }
 .auth-switch a { color: var(--blue); font-weight: 700; }
+.form-error { padding: 10px 11px; margin: 0 0 13px; border: 1px solid #f0cbce; border-radius: 8px; color: #a23d49; background: var(--rose-soft); font-size: 10px; line-height: 1.5; }
 .landing { background: white; min-height: 100vh; }
 .landing-nav { height: 76px; padding: 0 max(6vw,24px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f1f4; }
 .landing-nav .brand { padding: 0; }
