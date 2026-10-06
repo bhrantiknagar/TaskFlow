@@ -15,7 +15,7 @@ const publicPage = (req, res, next) => res.sendFile(path.join(frontendPath, 'ind
 
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({
+app.use(cors({ 
   origin(origin, callback) {
     callback(null, !origin || config.frontendOrigins.has(origin));
   },
