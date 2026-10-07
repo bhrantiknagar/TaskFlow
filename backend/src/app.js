@@ -35,5 +35,5 @@ app.use(express.static(frontendPath, { index: false, dotfiles: 'ignore', fallthr
 app.use('/api', notFound);
 app.use(notFound);
 app.use(errorHandler);
-
+ 
 module.exports = app;
