@@ -15,7 +15,7 @@ async function start() {
   process.once('SIGINT', () => shutdown('SIGINT'));
   process.once('SIGTERM', () => shutdown('SIGTERM'));
 }
-
+  
 start().catch(error => {
   console.error('Unable to start TaskFlow:', error.message);
   process.exitCode = 1;
