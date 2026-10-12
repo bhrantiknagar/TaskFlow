@@ -1,8 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const authenticate = require('../middleware/authenticate');
+const { sameId, isProjectMember, canViewProject, canManageProject } = require('../middleware/projectAccess');
 const { Project, projectStatuses } = require('../models/Project');
 const { User } = require('../models/User');
+const { Task } = require('../models/Task');
 
 const router = express.Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,11 +16,6 @@ router.use(authenticate);
 
 const validId = value => mongoose.isValidObjectId(value);
 const escapedRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const sameId = (a, b) => String(a?._id || a) === String(b?._id || b);
-const isMember = (project, userId) => project.members.some(member => sameId(member, userId));
-const canView = (project, user) => user.role === 'Admin' || sameId(project.owner, user.id) || isMember(project, user.id);
-const canManage = (project, user) => user.role === 'Admin' || sameId(project.owner, user.id) || (user.role === 'Project Manager' && isMember(project, user.id));
-
 function serializeProject(project, user) {
   const owner = project.owner && typeof project.owner === 'object' ? {
     id: String(project.owner._id), name: project.owner.name, email: project.owner.email, role: project.owner.role
@@ -30,7 +27,7 @@ function serializeProject(project, user) {
     id: String(project._id), name: project.name, description: project.description,
     owner, members, startDate: project.startDate, deadline: project.deadline,
     status: project.status, createdAt: project.createdAt, updatedAt: project.updatedAt,
-    canManage: canManage(project, user)
+    canManage: canManageProject(project, user)
   };
 }
 
@@ -121,7 +118,7 @@ router.get('/:id', async (req, res, next) => {
   try {
     if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid project id.' });
     const project = await loadProject(req.params.id);
-    if (!project || !canView(project, req.user)) return res.status(404).json({ error: 'Project not found.' });
+    if (!project || !canViewProject(project, req.user)) return res.status(404).json({ error: 'Project not found.' });
     return res.json({ project: serializeProject(project, req.user) });
   } catch (error) { return next(error); }
 });
@@ -131,7 +128,7 @@ router.patch('/:id', async (req, res, next) => {
     if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid project id.' });
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found.' });
-    if (!canManage(project, req.user)) return res.status(403).json({ error: 'You do not have permission to edit this project.' });
+    if (!canManageProject(project, req.user)) return res.status(403).json({ error: 'You do not have permission to edit this project.' });
     const parsed = parseProjectFields(req.body);
     if (parsed.error) return res.status(400).json(parsed);
     const combined = { ...project.toObject(), ...parsed.values };
@@ -149,8 +146,9 @@ router.delete('/:id', async (req, res, next) => {
     if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid project id.' });
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found.' });
-    if (!canManage(project, req.user)) return res.status(403).json({ error: 'You do not have permission to delete this project.' });
+    if (!canManageProject(project, req.user)) return res.status(403).json({ error: 'You do not have permission to delete this project.' });
     await project.deleteOne();
+    await Task.deleteMany({ project: project._id });
     return res.status(200).json({ message: 'Project deleted.' });
   } catch (error) { return next(error); }
 });
@@ -160,13 +158,13 @@ router.post('/:id/members', async (req, res, next) => {
     if (!validId(req.params.id)) return res.status(400).json({ error: 'Invalid project id.' });
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found.' });
-    if (!canManage(project, req.user)) return res.status(403).json({ error: 'You do not have permission to manage project members.' });
+    if (!canManageProject(project, req.user)) return res.status(403).json({ error: 'You do not have permission to manage project members.' });
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     if (!email || email.length > 254 || !emailPattern.test(email)) return res.status(400).json({ error: 'Enter a valid member email address.' });
     const member = await User.findOne({ email }).select('name email role');
     if (!member) return res.status(404).json({ error: 'No TaskFlow account was found for that email.' });
     if (sameId(project.owner, member.id)) return res.status(409).json({ error: 'The project owner already has access.' });
-    if (isMember(project, member.id)) return res.status(409).json({ error: 'This user is already a project member.' });
+    if (isProjectMember(project, member.id)) return res.status(409).json({ error: 'This user is already a project member.' });
     if (project.members.length >= 100) return res.status(400).json({ error: 'A project can have no more than 100 members.' });
     const added = await Project.updateOne({ _id: project.id, members: { $ne: member.id } }, { $addToSet: { members: member.id } });
     if (!added.modifiedCount) return res.status(409).json({ error: 'This user is already a project member.' });
@@ -180,11 +178,12 @@ router.delete('/:id/members/:userId', async (req, res, next) => {
     if (!validId(req.params.id) || !validId(req.params.userId)) return res.status(400).json({ error: 'Invalid project or user id.' });
     const project = await Project.findById(req.params.id);
     if (!project) return res.status(404).json({ error: 'Project not found.' });
-    if (!canManage(project, req.user)) return res.status(403).json({ error: 'You do not have permission to manage project members.' });
+    if (!canManageProject(project, req.user)) return res.status(403).json({ error: 'You do not have permission to manage project members.' });
     if (sameId(project.owner, req.params.userId)) return res.status(409).json({ error: 'The project owner cannot be removed.' });
-    if (!isMember(project, req.params.userId)) return res.status(404).json({ error: 'Project member not found.' });
+    if (!isProjectMember(project, req.params.userId)) return res.status(404).json({ error: 'Project member not found.' });
     project.members = project.members.filter(member => !sameId(member, req.params.userId));
     await project.save();
+    await Task.updateMany({ project: project._id, assignee: req.params.userId }, { $set: { assignee: null } });
     const saved = await loadProject(project.id);
     return res.json({ project: serializeProject(saved, req.user) });
   } catch (error) { return next(error); }

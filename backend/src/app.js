@@ -6,6 +6,7 @@ const cors = require('cors');
 const config = require('./config');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
+const taskRoutes = require('./routes/tasks');
 const authenticate = require('./middleware/authenticate');
 const { notFound, errorHandler } = require('./middleware/errors');
 
@@ -27,6 +28,7 @@ app.use(express.json({ limit: '10kb', strict: true }));
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.get(['/', '/login', '/register'], publicPage);

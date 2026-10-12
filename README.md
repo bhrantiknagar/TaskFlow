@@ -1,11 +1,11 @@
 # TaskFlow
 
-TaskFlow is a web-based project and task management system in development, planned to help teams organize projects, assign and track tasks, and plan work collaboratively. The current implementation includes the Phase 2 interface, Phase 3 authentication and profile foundation, and Phase 4 project management. Task operations and AI features remain planned.
+TaskFlow is a web-based project and task management system in development, planned to help teams organize projects, assign and track tasks, and plan work collaboratively. The current implementation includes a responsive frontend, authentication and profile management, project management, and task management. AI features remain planned.
 
 ## Planned features
 
 - Project creation, search, status filtering, and member management
-- Task assignment, prioritization, deadlines, and progress tracking
+- Task assignment, prioritization, deadlines, status tracking, search and filters, and subtasks
 - Task comments and activity history
 - AI Task Suggestions
 - AI Task Breakdown
@@ -14,7 +14,7 @@ TaskFlow is a web-based project and task management system in development, plann
 
 HTML, CSS, JavaScript, Node.js, Express.js, MongoDB, JWT authentication, and Git/GitHub.
 
-See [docs/PHASE_1.md](docs/PHASE_1.md) for the project definition and development plan, and [docs/PHASE_4.md](docs/PHASE_4.md) for project management behavior and permissions.
+See [docs/PHASE_1.md](docs/PHASE_1.md) for the project definition and development plan, [docs/PHASE_4.md](docs/PHASE_4.md) for project management behavior, and [docs/PHASE_5.md](docs/PHASE_5.md) for task management behavior and permissions.
 
 ## Run locally
 
