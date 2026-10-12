@@ -95,6 +95,12 @@ test('task CRUD, filters, assignments, permissions, and subtasks', { skip: !canR
     assert.equal(response.status, 400, 'invalid due dates are rejected');
     response = await request(`/api/tasks/${taskId}`, json('PATCH', { priority: 'Urgent' }, ownerCookie));
     assert.equal(response.status, 400, 'invalid task priority is rejected');
+    response = await request(`/api/tasks/${taskId}`, json('PATCH', { assignee: String(users[3]._id) }, managerCookie));
+    assert.equal(response.status, 400, 'manager cannot assign a nonmember');
+    response = await request(`/api/tasks/${taskId}`, json('PATCH', { assignee: String(users[0]._id) }, managerCookie));
+    assert.equal(response.status, 200, 'manager can assign a project participant');
+    response = await request(`/api/tasks/${taskId}`, json('PATCH', { assignee: String(users[1]._id) }, managerCookie));
+    assert.equal(response.status, 200, 'manager can reassign the task to a project member');
 
     response = await request(`/api/tasks/${taskId}/subtasks`, json('POST', { title: 'Review the draft' }, ownerCookie));
     assert.equal(response.status, 201, 'manager can add a subtask');
@@ -124,6 +130,11 @@ test('task CRUD, filters, assignments, permissions, and subtasks', { skip: !canR
 
     response = await request('/api/tasks', json('POST', { title: 'Admin task', project: projectId }, adminCookie));
     assert.equal(response.status, 201, 'Admin can create tasks in a project');
+    const adminTaskId = (await response.json()).task.id;
+    response = await request(`/api/projects/${projectId}`, { method: 'DELETE', headers: { Cookie: adminCookie } });
+    assert.equal(response.status, 200, 'Admin can delete the project');
+    response = await request(`/api/tasks/${adminTaskId}`, { headers: { Cookie: adminCookie } });
+    assert.equal(response.status, 404, 'deleting a project removes its tasks');
   } finally {
     if (projectId) await Project.deleteOne({ _id: projectId });
     if (users.length) {
