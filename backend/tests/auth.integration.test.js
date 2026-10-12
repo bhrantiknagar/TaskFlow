@@ -77,6 +77,9 @@ test('registration, login, logout, validation, duplicates, profile, and protecte
     const renewedCookie = cookieFrom(response);
     response = await request('/api/auth/me', { headers: { Cookie: renewedCookie } });
     assert.equal(response.status, 200, 'new session uses the updated token version');
+    result = await response.json();
+    assert.equal(result.user.name, 'Taylor Member', 'profile updates persist across a new login');
+    assert.equal(result.user.jobTitle, 'Designer', 'profile fields persist in MongoDB');
   } finally {
     await User.deleteOne({ email });
     await new Promise(resolve => server.close(resolve));
