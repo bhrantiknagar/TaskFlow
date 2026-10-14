@@ -69,6 +69,7 @@ h1 { margin-bottom: 6px; font: 700 24px Manrope,sans-serif; letter-spacing: -.6p
 .button:hover { border-color: #cfd3dc; background: #fafbfc; }
 .button.primary { color: white; background: var(--blue); border-color: var(--blue); }
 .button.primary:hover { background: #4758c6; }
+.button:disabled, .button.primary:disabled { cursor: not-allowed; opacity: .48; box-shadow: none; }
 .button.subtle { color: var(--blue); border-color: transparent; background: var(--blue-soft); }
 .grid { display: grid; gap: 16px; }
 .stats { grid-template-columns: repeat(4,minmax(0,1fr)); margin-bottom: 20px; }
