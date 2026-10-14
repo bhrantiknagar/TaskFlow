@@ -54,9 +54,11 @@ test('AI routes require authorized users and persist only explicitly approved ta
     response = await request('/api/ai/suggestions', json('POST', { projectId }, outsiderCookie));
     assert.equal(response.status, 404, 'outsiders cannot read project context');
     response = await request('/api/ai/suggestions', json('POST', { projectId }, memberCookie));
-    assert.equal(response.status, 403, 'members without management rights cannot generate saveable tasks');
+    assert.equal(response.status, 200, 'project members can generate task drafts');
     response = await request('/api/ai/breakdown', json('POST', { taskId: String(task._id) }, memberCookie));
-    assert.equal(response.status, 403, 'members without management rights cannot generate subtasks');
+    assert.equal(response.status, 200, 'project members can generate subtask drafts');
+    assert.equal(await Task.countDocuments({ project: project._id }), 1, 'member generation does not persist tasks');
+    assert.equal((await Task.findById(task._id)).subtasks.length, 0, 'member generation does not persist subtasks');
     response = await request('/api/ai/suggestions', json('POST', { projectId }, ownerCookie));
     assert.equal(response.status, 200);
     const generated = await response.json();
@@ -65,14 +67,25 @@ test('AI routes require authorized users and persist only explicitly approved ta
     response = await request('/api/ai/breakdown', json('POST', { taskId: String(task._id) }, ownerCookie));
     assert.deepEqual((await response.json()).subtasks, [{ title: 'List key milestones' }]);
     assert.equal((await Task.findById(task._id)).subtasks.length, 0, 'generation alone does not persist subtasks');
-    assert.deepEqual(calls, { suggestions: 1, breakdown: 1 });
+    assert.deepEqual(calls, { suggestions: 2, breakdown: 2 });
+
+    response = await request('/api/ai/suggestions/approve', json('POST', { projectId, suggestions: [{ title: 'Member approved task', description: 'Reviewed by the project member.', priority: 'High' }] }, memberCookie));
+    assert.equal(response.status, 201, 'a project member can explicitly approve generated task drafts');
+    response = await request('/api/ai/breakdown/approve', json('POST', { taskId: String(task._id), subtasks: [{ title: 'Member approved subtask' }] }, memberCookie));
+    assert.equal(response.status, 201, 'a project member can explicitly approve generated subtasks');
+    assert.equal(await Task.countDocuments({ project: project._id }), 2, 'approved task is persisted in MongoDB');
+    assert.equal((await Task.findById(task._id)).subtasks.length, 1, 'approved subtask is persisted in MongoDB');
+    response = await request('/api/ai/suggestions/approve', json('POST', { projectId, suggestions: [{ title: 'x', description: '', priority: 'Medium' }] }, memberCookie));
+    assert.equal(response.status, 400, 'invalid approved task fields are rejected');
+    response = await request('/api/ai/suggestions/approve', json('POST', { projectId, suggestions: [{ title: 'Outsider task', description: '', priority: 'Low' }] }, outsiderCookie));
+    assert.equal(response.status, 404, 'outsiders cannot save tasks to project');
 
     response = await request('/api/tasks', json('POST', { project: projectId, title: generated.suggestions[0].title, description: generated.suggestions[0].description, priority: generated.suggestions[0].priority }, ownerCookie));
     assert.equal(response.status, 201, 'only an explicit approved task save creates a MongoDB task');
     response = await request(`/api/tasks/${task._id}/subtasks`, json('POST', { title: 'List key milestones' }, ownerCookie));
     assert.equal(response.status, 201, 'only an explicit approved subtask save updates MongoDB');
-    assert.equal(await Task.countDocuments({ project: project._id }), 2);
-    assert.equal((await Task.findById(task._id)).subtasks.length, 1);
+    assert.equal(await Task.countDocuments({ project: project._id }), 3);
+    assert.equal((await Task.findById(task._id)).subtasks.length, 2);
   } finally {
     if (projectId) { await Task.deleteMany({ project: projectId }); await Project.deleteOne({ _id: projectId }); }
     if (users.length) { const ids = users.map(user => user._id); await Task.deleteMany({ project: { $in: ids } }); await Task.deleteMany({ createdBy: { $in: ids } }); await Project.deleteMany({ owner: { $in: ids } }); await User.deleteMany({ _id: { $in: ids } }); }

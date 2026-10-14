@@ -13,6 +13,7 @@ process.env.COOKIE_SECURE ||= 'false';
 
 test('registration, login, logout, validation, duplicates, profile, and protected access', { skip: !canRun && 'Set TASKFLOW_TEST_MONGODB_URI to a disposable MongoDB database whose name contains "test".' }, async () => {
   const mongoose = require('mongoose');
+  const bcrypt = require('bcryptjs');
   const app = require('../src/app');
   const { User } = require('../src/models/User');
   await mongoose.connect(testMongoUri);
@@ -41,6 +42,9 @@ test('registration, login, logout, validation, duplicates, profile, and protecte
     const registeredCookie = cookieFrom(response);
     assert.ok(registeredCookie, 'registration sets an authentication cookie');
     assert.match(response.headers.get('set-cookie'), /HttpOnly/i, 'session cookie is HttpOnly');
+    const storedUser = await User.findOne({ email }).select('+passwordHash');
+    assert.notEqual(storedUser.passwordHash, 'Sufficient-test-password-1', 'passwords are not stored in plain text');
+    assert.equal(await bcrypt.compare('Sufficient-test-password-1', storedUser.passwordHash), true, 'stored password hash verifies with bcrypt');
 
     response = await request('/api/auth/me', { headers: { Cookie: registeredCookie } });
     assert.equal(response.status, 200, 'valid session can access protected profile');
@@ -59,6 +63,12 @@ test('registration, login, logout, validation, duplicates, profile, and protecte
     assert.equal(response.status, 200, 'valid login succeeds');
     const loginCookie = cookieFrom(response);
     assert.ok(loginCookie, 'login sets an authentication cookie');
+
+    const [cookieName, token] = loginCookie.split('=');
+    const tokenParts = token.split('.');
+    tokenParts[2] = `${tokenParts[2][0] === 'a' ? 'b' : 'a'}${tokenParts[2].slice(1)}`;
+    response = await request('/api/auth/me', { headers: { Cookie: `${cookieName}=${tokenParts.join('.')}` } });
+    assert.equal(response.status, 401, 'tampered JWT signatures are rejected');
 
     response = await request('/api/auth/me', json('PATCH', { name: 'Taylor Member', jobTitle: 'Designer', bio: 'Working on TaskFlow.' }, loginCookie));
     assert.equal(response.status, 200, 'profile can be updated');
