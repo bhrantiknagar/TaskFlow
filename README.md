@@ -20,7 +20,7 @@ See [docs/PHASE_1.md](docs/PHASE_1.md) for the project definition and developmen
 
 1. Install Node.js 20 or later and run MongoDB locally.
 2. Copy `backend/.env.example` to `backend/.env` and set a private `JWT_SECRET` of at least 32 characters.
-3. To enable AI assistance, configure `AI_PROVIDER=openai`, `OPENAI_API_KEY`, and `OPENAI_MODEL` in `backend/.env`. Use a model that supports the Responses API and Structured Outputs. The provider key remains on the backend and must be obtained from your provider account; AI calls are unavailable until configured.
+3. To enable AI assistance, configure `AI_PROVIDER=groq`, `GROQ_API_KEY`, and `GROQ_MODEL` in `backend/.env`. Choose a Groq model that supports strict Structured Outputs (for example, `openai/gpt-oss-120b`). The provider key remains on the backend and must be obtained from your Groq account; AI calls are unavailable until configured.
 4. From `backend/`, run `npm install`, then `npm start`.
 5. Open `http://localhost:3000`.
 

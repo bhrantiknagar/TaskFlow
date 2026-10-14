@@ -8,7 +8,7 @@ class AiProviderError extends Error {
 
 const taskSchema = {
   type: 'object', additionalProperties: false, required: ['tasks'], properties: {
-    tasks: { type: 'array', minItems: 1, maxItems: 8, items: {
+    tasks: { type: 'array', items: {
       type: 'object', additionalProperties: false, required: ['title', 'description', 'priority'], properties: {
         title: { type: 'string' }, description: { type: 'string' }, priority: { type: 'string', enum: ['Low', 'Medium', 'High'] }
       }
@@ -17,7 +17,7 @@ const taskSchema = {
 };
 const breakdownSchema = {
   type: 'object', additionalProperties: false, required: ['subtasks'], properties: {
-    subtasks: { type: 'array', minItems: 1, maxItems: 8, items: {
+    subtasks: { type: 'array', items: {
       type: 'object', additionalProperties: false, required: ['title'], properties: { title: { type: 'string' } }
     } }
   }
@@ -49,16 +49,16 @@ function validateList(data, key, breakdown, maxItems = 8) {
 
 function createAiProvider({ fetchImpl = globalThis.fetch, env = process.env } = {}) {
   async function request({ instructions, input, name, schema, kind, maxItems = 8 }) {
-    if ((env.AI_PROVIDER || 'openai').toLowerCase() !== 'openai') throw new AiProviderError('The configured AI provider is not supported.', 503);
-    if (!env.OPENAI_API_KEY || !env.OPENAI_MODEL) throw new AiProviderError('AI assistance is not configured. Set OPENAI_API_KEY and OPENAI_MODEL in backend/.env.', 503);
+    if ((env.AI_PROVIDER || 'groq').toLowerCase() !== 'groq') throw new AiProviderError('The configured AI provider is not supported.', 503);
+    if (!env.GROQ_API_KEY || !env.GROQ_MODEL) throw new AiProviderError('AI assistance is not configured. Set GROQ_API_KEY and GROQ_MODEL in backend/.env.', 503);
     let response;
     try {
-      response = await fetchImpl('https://api.openai.com/v1/responses', {
+      response = await fetchImpl('https://api.groq.com/openai/v1/responses', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(20000),
         body: JSON.stringify({
-          model: env.OPENAI_MODEL, store: false, instructions, input,
+          model: env.GROQ_MODEL, instructions, input,
           text: { format: { type: 'json_schema', name, strict: true, schema } }
         })
       });
@@ -80,8 +80,8 @@ function createAiProvider({ fetchImpl = globalThis.fetch, env = process.env } = 
       input: JSON.stringify({ projectName: project.name, projectDescription: project.description, existingTaskTitles: existingTitles })
     }),
     breakDownTask: ({ task, maxSubtasks = 8 }) => request({
-      name: 'task_breakdown', schema: { ...breakdownSchema, properties: { subtasks: { ...breakdownSchema.properties.subtasks, maxItems: maxSubtasks } } }, kind: 'subtasks', maxItems: maxSubtasks,
-      instructions: 'Break the task into a short sequence of distinct, actionable subtasks. Titles must be specific and concise.',
+      name: 'task_breakdown', schema: breakdownSchema, kind: 'subtasks', maxItems: maxSubtasks,
+      instructions: `Break the task into up to ${maxSubtasks} distinct, actionable subtasks. Titles must be specific and concise.`,
       input: JSON.stringify({ title: task.title, description: task.description })
     })
   };
