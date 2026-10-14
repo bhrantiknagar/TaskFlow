@@ -52,11 +52,13 @@ function serializeTask(task, user) {
   const manager = canManageProject(project, user);
   const assignee = task.assignee ? { id: String(task.assignee._id), name: task.assignee.name, email: task.assignee.email } : null;
   const projectInfo = { id: String(project._id), name: project.name };
+  const subtasks = task.subtasks.map(subtask => ({ id: String(subtask._id), title: subtask.title, completed: subtask.completed }));
+  const progress = task.status === 'Completed' ? 100 : subtasks.length ? Math.round(subtasks.filter(subtask => subtask.completed).length / subtasks.length * 100) : 0;
   return {
     id: String(task._id), title: task.title, description: task.description,
     project: projectInfo, assignee, createdBy: task.createdBy ? { id: String(task.createdBy._id), name: task.createdBy.name } : null,
-    priority: task.priority, status: task.status, dueDate: task.dueDate,
-    subtasks: task.subtasks.map(subtask => ({ id: String(subtask._id), title: subtask.title, completed: subtask.completed })),
+    priority: task.priority, status: task.status, progress, dueDate: task.dueDate,
+    subtasks,
     createdAt: task.createdAt, updatedAt: task.updatedAt,
     canManage: manager, canEdit: manager || sameId(task.assignee, user.id)
   };
@@ -207,6 +209,7 @@ router.post('/:id/subtasks', async (req, res, next) => {
     if (result.task.subtasks.length >= 50) return res.status(400).json({ error: 'A task can have no more than 50 subtasks.' });
     const task = await Task.findById(result.task._id);
     task.subtasks.push(parsed.values[0]);
+    if (task.status === 'Completed') task.status = 'In Progress';
     await task.save();
     const saved = await accessibleTask(task.id, req.user);
     return res.status(201).json({ task: serializeTask(saved.task, req.user) });
@@ -236,6 +239,8 @@ router.patch('/:id/subtasks/:subtaskId', async (req, res, next) => {
       if (typeof body.completed !== 'boolean') return res.status(400).json({ error: 'Subtask completed must be true or false.' });
       item.completed = body.completed;
     }
+    if (task.subtasks.length && task.subtasks.every(subtask => subtask.completed)) task.status = 'Completed';
+    else if (task.status === 'Completed') task.status = 'In Progress';
     await task.save();
     const saved = await accessibleTask(task.id, req.user);
     return res.json({ task: serializeTask(saved.task, req.user) });
@@ -252,6 +257,8 @@ router.delete('/:id/subtasks/:subtaskId', async (req, res, next) => {
     const item = task.subtasks.id(req.params.subtaskId);
     if (!item) return res.status(404).json({ error: 'Subtask not found.' });
     item.deleteOne();
+    if (task.subtasks.length && task.subtasks.every(subtask => subtask.completed)) task.status = 'Completed';
+    else if (task.status === 'Completed' && task.subtasks.some(subtask => !subtask.completed)) task.status = 'In Progress';
     await task.save();
     const saved = await accessibleTask(task.id, req.user);
     return res.json({ task: serializeTask(saved.task, req.user) });

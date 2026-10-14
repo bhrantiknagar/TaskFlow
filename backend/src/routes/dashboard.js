@@ -27,21 +27,23 @@ router.get('/', async (req, res, next) => {
     const projectIds = projects.map(project => project._id);
     const records = projectIds.length
       ? await Task.find({ project: { $in: projectIds } })
-        .select('_id title project assignee priority status dueDate updatedAt')
+        .select('_id title project assignee priority status subtasks dueDate updatedAt')
         .populate('assignee', 'name email').sort({ updatedAt: -1 }).lean()
       : [];
     const projectMap = new Map(projects.map(project => [String(project._id), project]));
-    const counts = new Map(projects.map(project => [String(project._id), { total: 0, completed: 0 }]));
+    const counts = new Map(projects.map(project => [String(project._id), { total: 0, completed: 0, progressTotal: 0 }]));
     const serializedTasks = records.map(task => {
       const project = projectMap.get(String(task.project));
       const count = counts.get(String(task.project));
+      const progress = task.status === 'Completed' ? 100 : task.subtasks.length ? Math.round(task.subtasks.filter(subtask => subtask.completed).length / task.subtasks.length * 100) : 0;
       count.total += 1;
       if (task.status === 'Completed') count.completed += 1;
+      count.progressTotal += progress;
       return {
         id: String(task._id), title: task.title,
         project: { id: String(project._id), name: project.name },
         assignee: task.assignee ? { id: String(task.assignee._id), name: task.assignee.name, email: task.assignee.email } : null,
-        priority: task.priority, status: task.status, dueDate: task.dueDate, updatedAt: task.updatedAt
+        priority: task.priority, status: task.status, progress, dueDate: task.dueDate, updatedAt: task.updatedAt
       };
     });
     const projectResults = projects.map(project => {
@@ -49,7 +51,7 @@ router.get('/', async (req, res, next) => {
       return {
         id: String(project._id), name: project.name, status: project.status, deadline: project.deadline,
         taskCount: count.total, completedTaskCount: count.completed,
-        progress: count.total ? Math.round(count.completed / count.total * 100) : 0
+        progress: count.total ? Math.round(count.progressTotal / count.total) : 0
       };
     });
     const taskGroups = Object.fromEntries(taskStatuses.map(status => {
