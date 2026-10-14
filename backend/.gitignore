@@ -26,3 +26,6 @@ coverage/
 test-results/
 dist/
 build/
+
+.package-lock.json
+.package.json
