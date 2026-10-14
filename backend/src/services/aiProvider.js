@@ -34,8 +34,8 @@ function extractOutput(data) {
 
 function validateList(data, key, breakdown, maxItems = 8) {
   const list = data?.[key];
-  if (!Array.isArray(list) || list.length < 1 || list.length > maxItems) throw new AiProviderError('The AI provider returned no usable suggestions. Please try again.', 502);
-  const clean = list.map(item => {
+  if (!Array.isArray(list) || list.length < 1) throw new AiProviderError('The AI provider returned no usable suggestions. Please try again.', 502);
+  const clean = list.slice(0, maxItems).map(item => {
     if (!item || typeof item !== 'object' || Array.isArray(item)) throw new AiProviderError('The AI provider returned an invalid response. Please try again.', 502);
     const title = typeof item.title === 'string' ? item.title.trim() : '';
     if (title.length < 2 || title.length > 160) throw new AiProviderError('The AI provider returned an invalid response. Please try again.', 502);
@@ -76,7 +76,7 @@ function createAiProvider({ fetchImpl = globalThis.fetch, env = process.env } = 
   return {
     suggestTasks: ({ project, existingTitles }) => request({
       name: 'task_suggestions', schema: taskSchema, kind: 'tasks',
-      instructions: 'Create practical, distinct project tasks. Return concise task titles, actionable descriptions, and Low, Medium, or High priority. Do not include due dates or assumptions not present in the project brief.',
+      instructions: 'Create between 1 and 8 practical, distinct project tasks based on the provided project brief. Return concise task titles, actionable descriptions, and Low, Medium, or High priority. Do not include due dates or assumptions not present in the project brief.',
       input: JSON.stringify({ projectName: project.name, projectDescription: project.description, existingTaskTitles: existingTitles })
     }),
     breakDownTask: ({ task, maxSubtasks = 8 }) => request({
