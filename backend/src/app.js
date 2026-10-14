@@ -13,7 +13,9 @@ const authenticate = require('./middleware/authenticate');
 const { notFound, errorHandler } = require('./middleware/errors');
 
 const app = express();
-const frontendPath = path.resolve(__dirname, '../../frontend');
+const frontendSourcePath = path.resolve(__dirname, '../../frontend');
+const frontendBuildPath = path.join(frontendSourcePath, 'dist');
+const frontendPath = require('node:fs').existsSync(frontendBuildPath) ? frontendBuildPath : frontendSourcePath;
 const publicPage = (req, res, next) => res.sendFile(path.join(frontendPath, 'index.html'), error => error && next(error));
 
 app.disable('x-powered-by');
