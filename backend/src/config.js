@@ -13,6 +13,7 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT || 3000),
   mongoUri: required('MONGODB_URI'),
+  mongoDatabase: process.env.MONGODB_DB_NAME || 'taskFlow',
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   cookieName: process.env.COOKIE_NAME || 'taskflow_token',

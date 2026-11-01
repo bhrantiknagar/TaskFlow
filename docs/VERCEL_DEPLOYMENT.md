@@ -11,6 +11,7 @@ Import the repository in Vercel and use the repository root as the **Root Direct
 Set these in Vercel Project Settings → Environment Variables for **Production** (and Preview if you want preview deployments to work):
 
 - `MONGODB_URI`: a MongoDB Atlas connection string for a database you control. A local value such as `mongodb://localhost:27017/...` cannot be reached by Vercel.
+- `MONGODB_DB_NAME`: database name, normally `taskFlow` (the application defaults to this if omitted).
 - `JWT_SECRET`: a private random value of at least 32 characters. Use a different value from local development.
 - `NODE_ENV`: `production`.
 - `COOKIE_SECURE`: `true`.

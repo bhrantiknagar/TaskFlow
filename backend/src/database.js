@@ -8,6 +8,7 @@ function connectDatabase() {
 
   if (!connectionPromise) {
     connectionPromise = mongoose.connect(config.mongoUri, {
+      dbName: config.mongoDatabase,
       serverSelectionTimeoutMS: 10000,
       maxPoolSize: 5
     }).then(() => mongoose.connection).catch(error => {
