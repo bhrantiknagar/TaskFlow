@@ -1,0 +1,16 @@
+{
+  "name": "taskflow-deployment",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=taskflow-frontend",
+    "start": "npm run start --workspace=taskflow-backend"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

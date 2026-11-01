@@ -1,13 +1,14 @@
-const mongoose = require('mongoose');
 const app = require('./app');
 const config = require('./config');
+const { connectDatabase } = require('./database');
 
 async function start() {
-  await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 10000 });
+  await connectDatabase();
   const server = app.listen(config.port, () => console.log(`TaskFlow server listening on port ${config.port}`));
   const shutdown = async signal => {
     console.log(`${signal} received. Closing TaskFlow server.`);
     server.close(async () => {
+      const mongoose = require('mongoose');
       await mongoose.disconnect();
       process.exit(0);
     });
