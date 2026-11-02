@@ -20,6 +20,8 @@ Set `GROQ_API_KEY` and `GROQ_MODEL` only if you want AI assistance enabled. The 
 
 If the browser frontend and API are ever hosted on separate origins, set `FRONTEND_ORIGINS` to the exact frontend origin(s), comma separated. A same-domain Vercel deployment does not need this setting.
 
+No frontend environment variable is required for this single-domain setup. The browser uses relative `/api` requests. If you later host the API on a different origin, set the public `VITE_API_BASE_URL` value at build time to that API origin (for example, `https://api.example.com`). This setting is exposed in browser code and must never contain credentials or other secrets. `frontend/.env.example` documents the optional setting.
+
 For MongoDB Atlas, ensure its network access settings allow connections from your deployment. Atlas IP allowlisting and Vercel's changing outbound IPs can require a suitable Atlas network policy or a Vercel static outbound IP feature available to your plan. Do not use an unrestricted database user; grant only the permissions the application needs.
 
 After adding or changing environment values, create a new deployment so the function receives them. Never commit `.env` files or paste secrets into source code.
