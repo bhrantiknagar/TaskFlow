@@ -44,7 +44,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/ai', aiRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-
+ 
 if (frontendPath) {
   app.get(['/', '/login', '/register'], publicPage);
   app.get(['/dashboard', '/projects', '/project/:id', '/tasks', '/task/:id', '/assistant', '/profile'], authenticate, publicPage);
