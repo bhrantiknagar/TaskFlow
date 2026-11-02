@@ -1,4 +1,5 @@
 const path = require('node:path');
+const fs = require('node:fs');
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
@@ -15,8 +16,15 @@ const { notFound, errorHandler } = require('./middleware/errors');
 const app = express();
 const frontendSourcePath = path.resolve(__dirname, '../../frontend');
 const frontendBuildPath = path.join(frontendSourcePath, 'dist');
-const frontendPath = require('node:fs').existsSync(frontendBuildPath) ? frontendBuildPath : frontendSourcePath;
-const publicPage = (req, res, next) => res.sendFile(path.join(frontendPath, 'index.html'), error => error && next(error));
+const frontendPath = fs.existsSync(path.join(frontendBuildPath, 'index.html'))
+  ? frontendBuildPath
+  : fs.existsSync(path.join(frontendSourcePath, 'index.html'))
+    ? frontendSourcePath
+    : null;
+const publicPage = (req, res, next) => {
+  if (!frontendPath) return res.status(404).json({ error: 'The TaskFlow frontend is hosted separately.' });
+  return res.sendFile(path.join(frontendPath, 'index.html'), error => error && next(error));
+};
  
 app.disable('x-powered-by');
 app.use(helmet({ contentSecurityPolicy: false }));
@@ -37,9 +45,13 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/ai', aiRoutes);
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-app.get(['/', '/login', '/register'], publicPage);
-app.get(['/dashboard', '/projects', '/project/:id', '/tasks', '/task/:id', '/assistant', '/profile'], authenticate, publicPage);
-app.use(express.static(frontendPath, { index: false, dotfiles: 'ignore', fallthrough: true }));
+if (frontendPath) {
+  app.get(['/', '/login', '/register'], publicPage);
+  app.get(['/dashboard', '/projects', '/project/:id', '/tasks', '/task/:id', '/assistant', '/profile'], authenticate, publicPage);
+  app.use(express.static(frontendPath, { index: false, dotfiles: 'ignore', fallthrough: true }));
+} else {
+  app.get('/', (req, res) => res.json({ service: 'TaskFlow API', health: '/api/health' }));
+}
 app.use('/api', notFound);
 app.use(notFound);
 app.use(errorHandler);
