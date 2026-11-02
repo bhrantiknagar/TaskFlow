@@ -31,3 +31,11 @@ After adding or changing environment values, create a new deployment so the func
 After deployment, open the Vercel URL and check `/api/health` returns `{"status":"ok"}`. Then register a test user and verify sign-in, sign-out, project/task access, and AI actions if Groq is configured. Confirm the browser's network panel shows same-origin `/api/...` requests and no CORS or cookie errors.
 
 Vercel serves the production build; the Express static-file middleware is retained for the existing local single-server workflow. MongoDB is opened lazily and reused across warm function invocations.
+
+## Deploy only the backend as a separate Vercel project
+
+Create another Vercel project from the same repository and set its **Root Directory** to `backend`. The `backend/vercel.json` and `backend/api/[...path].js` files expose the existing Express routes as serverless API routes; do not use the local `npm start` command as the Vercel function entry point. Vercel installs the dependencies from `backend/package.json` and its lockfile.
+
+Set the required backend variables above in this backend project's Vercel settings. Also set `FRONTEND_ORIGINS` to the exact deployed frontend origin (no trailing slash) so credentialed browser requests pass CORS. Keep `COOKIE_SECURE=true`. If frontend and backend are on different sites and browser sign-in cookies are blocked, set `COOKIE_SAME_SITE=none`; this requires HTTPS and `COOKIE_SECURE=true`. The default is `strict`. Set the frontend Vercel build variable `VITE_API_BASE_URL` to the backend's origin (for example, `https://taskflow-api.vercel.app`) and redeploy the frontend. This URL is public; never place secrets there.
+
+The backend API health check is then available at `https://<backend-domain>/api/health`. Atlas must also permit connections from the backend deployment's network.

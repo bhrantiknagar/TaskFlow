@@ -16,7 +16,7 @@ React, HTML, CSS, JavaScript, Vite, Node.js, Express.js, MongoDB, JWT authentica
 
 See [docs/PHASE_1.md](docs/PHASE_1.md) for the project definition and development plan, [docs/PHASE_4.md](docs/PHASE_4.md) for project management behavior, and [docs/PHASE_5.md](docs/PHASE_5.md) for task management behavior and permissions.
 
-For Vercel deployment setup and required environment variables, see [docs/VERCEL_DEPLOYMENT.md](docs/VERCEL_DEPLOYMENT.md).
+Deploy the frontend and backend together on Render using [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md).
 
 ## Run locally
 

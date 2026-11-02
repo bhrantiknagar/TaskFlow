@@ -18,14 +18,14 @@ function setSessionCookie(res, user) {
   res.cookie(config.cookieName, token, {
     httpOnly: true,
     secure: config.cookieSecure,
-    sameSite: 'strict',
+    sameSite: config.cookieSameSite,
     path: '/',
     maxAge: Math.max(0, decoded.exp * 1000 - Date.now())
   });
 }
 
 function clearSessionCookie(res) {
-  res.clearCookie(config.cookieName, { httpOnly: true, secure: config.cookieSecure, sameSite: 'strict', path: '/' });
+  res.clearCookie(config.cookieName, { httpOnly: true, secure: config.cookieSecure, sameSite: config.cookieSameSite, path: '/' });
 }
 
 router.post('/register', registerLimit, async (req, res, next) => {
