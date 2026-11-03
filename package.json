@@ -11,6 +11,6 @@
     "start": "npm run start --workspace=taskflow-backend"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   }
 }
