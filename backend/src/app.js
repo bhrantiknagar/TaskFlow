@@ -35,7 +35,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type']
-}));
+})); 
 app.use(express.json({ limit: '10kb', strict: true }));
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
