@@ -14,7 +14,7 @@ function TaskFlowApp() {
   useLayoutEffect(() => {
     window.__taskflowBindPage?.();
   }, [page]);
-
+ 
   return <div className="taskflow-react-root" dangerouslySetInnerHTML={{ __html: page }} />;
 }
 
