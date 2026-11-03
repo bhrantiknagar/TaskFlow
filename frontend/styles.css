@@ -803,4 +803,4 @@ body { color: var(--ink); background: var(--canvas); }
   .feature-card .stat-icon { grid-row: span 2; margin: 0; }
   .feature-card h3 { margin: 2px 0 3px; }
   .feature-card p { grid-column: 2; margin: 0; }
-}
+} 
