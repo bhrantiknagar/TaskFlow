@@ -17,7 +17,7 @@ function connectDatabase() {
     });
   }
 
-  return connectionPromise;
+  return connectionPromise; 
 }
 
 module.exports = { connectDatabase };

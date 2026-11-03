@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     }
     apiBaseUrl = parsedApiBase.origin;
   }
-
+ 
   return {
     plugins: [
       react(),
