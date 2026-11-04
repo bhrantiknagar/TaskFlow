@@ -16,7 +16,7 @@ function connectDatabase() {
       throw error;
     });
   }
-
+ 
   return connectionPromise; 
 }
 
