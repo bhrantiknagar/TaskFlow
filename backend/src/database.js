@@ -14,7 +14,7 @@ function connectDatabase() {
     }).then(() => mongoose.connection).catch(error => {
       connectionPromise = undefined;
       throw error;
-    });
+    }); 
   }
  
   return connectionPromise; 
